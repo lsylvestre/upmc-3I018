@@ -12,7 +12,10 @@ let indent_factor = ref 2
 let indent_string (level:int) : string =
   String.make (level * !indent_factor) ' '
 
-let rec mappend (f:'a -> 'b list) (l:'a list) : 'b list =
+let mappend (f:'a -> 'b list) (l:'a list) : 'b list =
   List.fold_left (fun res e -> res @ (f e)) [] l
 
-                 
+let print_oc f s = 
+  let oc = open_out f in
+  Printf.fprintf oc "%s" s;
+  close_out oc
