@@ -1,0 +1,246 @@
+package microjs.jcompiler.frontend.parser;
+
+import java.util.List;
+import java.util.LinkedList;
+
+import java_cup.runtime.*;
+import microjs.jcompiler.frontend.lexer.Lexer;
+import microjs.jcompiler.frontend.ast.*;
+
+parser code {: public Prog resultat = null; :}
+
+terminal SEMICOL, VAR, LET, EQ,
+         LPAREN, RPAREN, LCURLY, RCURLY,
+         LBRACKET, RBRACKET, IF, ELSE, COMMA, FUNCTION, LAMBDA,
+         PLUS, MINUS, TIMES, DIV, RETURN, EQEQ,
+         UMINUS, MOD;
+
+terminal String IDENTIFIER;
+terminal Integer INT;
+terminal Boolean BOOL;
+
+non terminal Symbol program;
+non terminal List<Statement> statements;
+non terminal Statement statement, opened_statement, closed_statement;
+non terminal Expr expr;
+
+non terminal Statement function;
+
+non terminal List<Statement> block;
+
+non terminal List<String> parameters;
+
+non terminal List<Expr> arguments;
+
+precedence left EQEQ;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIV, MOD;
+precedence left UMINUS;
+
+program ::=
+	{:
+	   resultat = new Prog("", new LinkedList<Statement>(), null, null);
+	   RESULT   = null;
+	:}
+  | statements:prog
+	{:
+	   resultat = new Prog("", prog, progxleft, progxright);
+	   RESULT   = null;
+	:}
+;
+  
+statements ::=		/***** pas de vide *****/
+    statement:st
+	{:
+	   LinkedList<Statement> tmp = new LinkedList<Statement>();
+
+	   if (st != null) {
+	      tmp.add(st);
+	   }
+	   RESULT = tmp;
+	:}
+ | statement:st  statements:sts
+	{:
+           if (st != null) {
+	      ((LinkedList<Statement>) sts).addFirst(st);
+	   }
+	   RESULT = sts;
+	:}
+  | LET:l  IDENTIFIER:var  EQ  expr:e  SEMICOL
+	{:
+	   LinkedList<Statement> tmp = new LinkedList<Statement>();
+
+	   tmp.add(new Let(var, e, new LinkedList<Statement>(),
+			    lxleft, exright));
+	   RESULT = tmp;
+	:}
+  | LET:l  IDENTIFIER:var  EQ  expr:e  SEMICOL statements:sts
+	{:
+	   LinkedList<Statement> tmp = new LinkedList<Statement>();
+
+	   tmp.add(new Let(var, e, sts, lxleft, stsxright));
+	   RESULT = tmp;
+	:}
+;
+
+
+statement ::=
+    SEMICOL
+	{:
+	   RESULT = null;
+	:}
+  | opened_statement:ost  SEMICOL
+	{:
+	   RESULT = ost;
+	:}
+  | closed_statement:cst
+	{:
+	   RESULT = cst;
+	:}
+;
+
+
+opened_statement ::=
+    IDENTIFIER:id  EQ  expr:e
+	{:
+	   RESULT = new Assign(id, e, idxleft, exright);
+	:}
+  | VAR:v  IDENTIFIER:var  EQ  expr:e
+	{:
+	   RESULT = new Var(var, e, vxleft, exright);
+	:}
+  | expr:e
+	{:
+	   RESULT = new VoidExpr(e, exleft, exright);
+	:}
+  | RETURN:r expr:e
+	{:
+	   RESULT = new Return(e, rxleft, exright);
+	:}
+;
+
+
+closed_statement ::=
+    IF:i  LPAREN  expr:cond  RPAREN  block:thens
+	{:
+	   RESULT = new If(cond,
+			   thens,
+			   new LinkedList<Statement>(),
+			   ixleft, thensxright);
+	:}
+  | IF:i  LPAREN  expr:cond  RPAREN  block:thens  ELSE  block:elses
+	{:
+	   RESULT = new If(cond, thens, elses, ixleft, elsesxright);
+	:}
+  | function:f
+	{:
+	   RESULT = f;
+	:}
+;
+
+
+function ::=
+    FUNCTION:f  IDENTIFIER:id  LPAREN  RPAREN  block:body
+	{:
+	   RESULT = new Function(id, new LinkedList<String>(),
+                                 body, fxleft, bodyxright);
+	:}
+  | FUNCTION:f  IDENTIFIER:id  LPAREN  parameters:params  RPAREN  block:body
+	{:
+	   RESULT = new Function(id, params, body, fxleft, bodyxright);
+	:}
+;
+
+
+block ::=
+    LCURLY  RCURLY
+	{:
+	   RESULT = new LinkedList<Statement>();
+	:}
+  | LCURLY  statements:sts  RCURLY
+	{:
+	   RESULT = sts;
+	:}
+;
+
+
+parameters ::=		/***** pas de vide () ou de (...;;;...) *****/
+    IDENTIFIER:id
+	{:
+	   LinkedList<String> tempList = new LinkedList<String>();
+	   tempList.add(id);
+	   RESULT = tempList;
+	:}
+  | parameters:params  COMMA  IDENTIFIER:id
+	{:
+	   ((LinkedList<String>)params).add(id);
+	   RESULT = params;
+	:}
+;
+
+
+expr ::=
+    INT:n
+	{:
+	   RESULT = new IntConst(n, nxleft, nxright);
+	:}
+  | BOOL:b
+	{:
+	   RESULT = new BoolConst(b, bxleft, bxright);
+	:}
+  | expr:fun  LPAREN:l  RPAREN:r
+	{:
+	   RESULT = new Funcall(fun, new LinkedList<Expr>(),
+                                funxleft, rxright);
+	:}
+  | expr:fun  LPAREN  arguments:args  RPAREN
+	{:
+	   RESULT = new Funcall(fun, args, funxleft, argsxright);
+	:}
+  | LAMBDA:l  LPAREN  parameters:params  RPAREN  block:body
+	{:
+	   RESULT = new Lambda(params, body, lxleft, bodyxright);
+	:} 
+  | IDENTIFIER:var
+	{:
+	   RESULT = new EVar(var, varxleft, varxright);
+	:}
+  | expr:l  PLUS  expr:r
+	{:
+	   RESULT = new BinOp("+", l, r, lxleft, rxright);
+	:}
+  | expr:l  MINUS  expr:r
+	{:
+	   RESULT = new BinOp("-", l, r, lxleft, rxright);
+	:}
+  | expr:l  TIMES  expr:r
+	{:
+	   RESULT = new BinOp("*", l, r, lxleft, rxright);
+	:}
+  | expr:l  DIV  expr:r
+	{:
+	   RESULT = new BinOp("/", l, r, lxleft, rxright);
+	:}
+  | expr:l  EQEQ  expr:r
+	{:
+	   RESULT = new BinOp("==", l, r, lxleft, rxright);
+	:}
+  | LPAREN  expr:e  RPAREN
+	{:
+	   RESULT = e;
+	:}
+;
+
+arguments ::=		/***** pas de vide () ou de (...,,,...) *****/
+    expr:e
+	{:
+	   LinkedList<Expr> tempList = new LinkedList<Expr>();
+	   tempList.add(e);
+	   RESULT = tempList;
+	:}
+  | arguments:args  COMMA  expr:e
+	{:
+	   ((LinkedList<Expr>)args).add(e);
+	   RESULT = args;
+	:}
+;
