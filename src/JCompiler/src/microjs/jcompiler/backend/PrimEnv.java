@@ -54,12 +54,19 @@ public class PrimEnv {
 		primEnv.register(new Primitive("-", "Subtraction", "P_SUB"));
 		primEnv.register(new Primitive("*", "Multiplication", "P_MUL"));
 		primEnv.register(new Primitive("/", "Division", "P_DIV"));
+		primEnv.register(new Primitive("**", "Power of", "P_POW"));
 		primEnv.register(new Primitive("==", "Equality", "P_EQ"));
 		primEnv.register(new Primitive("<", "Lower", "P_INF"));
 		primEnv.register(new Primitive(">", "Greater", "P_SUP"));
 		primEnv.register(new Primitive("<=", "Lower or equal", "P_INFEQ"));
 		primEnv.register(new Primitive(">=", "Greater or equal", "P_SUPEQ"));
-		
+
+		primEnv.register(new Primitive("CONS", "Cons", "P_CONS")); 
+		primEnv.register(new Primitive("CAR", "Car", "P_CAR")); 
+		primEnv.register(new Primitive("CDR", "Cdr", "P_CDR"));
+		primEnv.register(new Primitive("!=", "inequal", "P_DIF")); 
+		primEnv.register(new Primitive("===", "strict equal", "P_EQEQ")); 
+		primEnv.register(new Primitive("!==", "strict inequal", "P_DIFEQ"));
 		return primEnv;
 	}
 	

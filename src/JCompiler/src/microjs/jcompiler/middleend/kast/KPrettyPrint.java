@@ -179,6 +179,10 @@ public class KPrettyPrint implements KASTVisitor {
 		indent();
 		buf.append("]");
 	}
+
+	public void visit(KWhile expr) {
+		throw new UnsupportedOperationException(); /* TO DO */
+	}
 	
 	@Override
 	public String toString() {

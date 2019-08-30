@@ -23,6 +23,7 @@ import microjs.jcompiler.middleend.kast.KStatement;
 import microjs.jcompiler.middleend.kast.KTrue;
 import microjs.jcompiler.middleend.kast.KVar;
 import microjs.jcompiler.middleend.kast.KVoidExpr;
+import microjs.jcompiler.middleend.kast.KWhile;
 
 public class Compiler implements KASTVisitor {
 	private Bytecode bytecode;
@@ -227,6 +228,32 @@ public class Compiler implements KASTVisitor {
 		buf.append(primEnv.genCDefinitions());
 		
 		return buf.toString();
+	}
+
+	@Override
+	public void visit(KWhile stmt) {
+	/*****
+	String condLbl  = nextLabel();
+	String finLbl = nextLabel();
+
+	bytecode.label(condLbl);	// condLbl :
+	stmt.getCond().accept(this);	//     ... code du cond
+	bytecode.jfalse(finLbl);	// JFALSE finLbl
+	stmt.getBody().accept(this);	//     ... code du corps
+	bytecode.jump(condLbl);		// JUMP condLbl
+	bytecode.label(finLbl);		// finLbl :
+	*****/
+
+	String condLbl  = nextLabel();
+	String corpsLbl = nextLabel();
+
+	bytecode.jump(condLbl);		// JUMP condLbl
+	bytecode.label(corpsLbl);	// corpsLbl :
+	stmt.getBody().accept(this);	//     ... code du corps
+	bytecode.label(condLbl);	// condLbl :
+	stmt.getCond().accept(this);	//     ... code du cond
+	bytecode.jtrue(corpsLbl);	// JTRUE corpsLbl
+
 	}
 
 }

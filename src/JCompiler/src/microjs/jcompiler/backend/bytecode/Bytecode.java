@@ -75,6 +75,10 @@ public class Bytecode {
 		code.add(new JFalse(lbl));
 		return this;
 	}
+	public Bytecode jtrue(String lbl) {
+		code.add(new JTrue(lbl));
+		return this;
+	}
 
 	@Override
 	public String toString() {
@@ -115,6 +119,8 @@ public class Bytecode {
 			instr = new JFalse("lbl");
 			instructionSet.put(instr.getOpcode(), instr);
 			instr = new Store(-1);
+			instructionSet.put(instr.getOpcode(), instr);
+			instr = new JTrue("lbl");
 			instructionSet.put(instr.getOpcode(), instr);
 		}
 		return instructionSet;

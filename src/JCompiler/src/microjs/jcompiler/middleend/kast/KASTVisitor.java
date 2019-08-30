@@ -7,6 +7,7 @@ public interface KASTVisitor {
 	public void visit(KVoidExpr stmt);
 	public void visit(KVar stmt);
 	public void visit(KIf stmt);
+	public void visit(KWhile expr);
 	public void visit(KSeq stmt);
 	public void visit(KAssign stmt);
 	public void visit(KReturn stmt);

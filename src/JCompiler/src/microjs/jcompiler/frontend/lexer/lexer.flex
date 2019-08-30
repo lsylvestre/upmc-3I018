@@ -56,64 +56,47 @@ LineTerminator = ( \u000D\u000A
 {NZDigit}{Digit}*     { return symbol("INT", sym.INT, Integer.parseInt(yytext())); }
 
 {LineTerminator} { /* ignore */ }
-
 [;]  { return symbol("SEMICOL", sym.SEMICOL); }
-
 [,]  { return symbol("COMMA", sym.COMMA); }
-
 ==  { return symbol("EQEQ", sym.EQEQ); }
-
 [=]  { return symbol("EQ", sym.EQ); }
-
 [{]  { return symbol("LCURLY", sym.LCURLY); }
-
 [}]  { return symbol("RCURLY", sym.RCURLY); }
-
 [\[]  { return symbol("LBRACKET", sym.LBRACKET); }
-
 [\]]  { return symbol("RBRACKET", sym.RBRACKET); }
-
 [(]  { return symbol("LPAREN", sym.LPAREN); }
-
 [)]  { return symbol("RPAREN", sym.RPAREN); }
-
-var { return symbol("VAR", sym.VAR); }
-
-let { return symbol("LET", sym.LET); }
-
+[\.] {return symbol("DOT", sym.DOT);}
 true { return symbol("BOOL", sym.BOOL, true); }
-
 false { return symbol("BOOL", sym.BOOL, false); }
-
-if { return symbol("IF", sym.IF); }
-
-else { return symbol("ELSE", sym.ELSE); }
-
-function { return symbol("FUNCTION", sym.FUNCTION); }
-
-lambda { return symbol("LAMBDA", sym.LAMBDA); }
-
 return { return symbol("RETURN", sym.RETURN); }
-
+function { return symbol("FUNCTION", sym.FUNCTION); }
+lambda { return symbol("LAMBDA", sym.LAMBDA); }
+var { return symbol("VAR", sym.VAR); }
+let { return symbol("LET", sym.LET); }
+if { return symbol("IF", sym.IF); }
+else { return symbol("ELSE", sym.ELSE); }
+while { return symbol("WHILE", sym.WHILE); }
 [+] { return symbol("PLUS", sym.PLUS); }
-
 [-] { return symbol("MINUS", sym.MINUS); }
-
 [*] { return symbol("TIMES", sym.TIMES); }
-
 [/] { return symbol("DIV", sym.DIV); }
-
+"**" { return symbol("POW", sym.POW); }
+"==" { return symbol("EQEQ", sym.EQEQ); }
+"!="  { return symbol("DIFEQ", sym.DIFEQ); }
+"===" { return symbol("EQEQEQ", sym.EQEQEQ); }
+"!=="  { return symbol("DIFEQEQ", sym.DIFEQEQ); }
+[<] { return symbol("INF", sym.INF); }
+[>] { return symbol("SUP", sym.SUP); }
+"<="  { return symbol("INFEQ", sym.INFEQ); }
+">="  { return symbol("SUPEQ", sym.SUPEQ); }
 {Identifier} { return symbol("IDENTIFIER", sym.IDENTIFIER, yytext()); }
-
 [ \t\f]  { /* ignore */ }
-
 \/\/.*\R { /* ignore */ }
-
 "/*"			{ yybegin(COMMENTAIRE_C); }
 <COMMENTAIRE_C>[^*]+	{ /* ignore */ }
 <COMMENTAIRE_C>\*+	{ /* ignore */ }
 <COMMENTAIRE_C>\**"*/"	{ yybegin(YYINITIAL); }
-
 /* error fallback */
 .		{  // very strange "bug"
                    if (yytext() == "\\u000A") { /* ignore */
