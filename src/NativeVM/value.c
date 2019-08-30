@@ -11,6 +11,7 @@
 
 #include "constants.h"
 #include "value.h"
+#include "env.h"  // ajout 24 avril 2019
 
 /** Préparation d'une valeur Unit.
  * \param[in,out] value la valeur à préparer.
@@ -111,7 +112,7 @@ int value_is_false(value_t *value)  {
 
 /** Récupérer la valeur entière */
 int value_int_get(value_t *value) {
-  assert(value->type == T_INT);
+  // assert(value->type == T_INT); /* commenté au TD 9 */
   return value->data.as_int;
 }
 

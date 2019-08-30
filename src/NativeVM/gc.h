@@ -19,7 +19,7 @@
 struct _vm;
 
 /** Structure pour les objets mémoire gérés par le GC.
-*/
+ */
 typedef struct _gc_cell {
   /** type de l'objet géré (T_PAIR ou T_ENV) */
   int type;
@@ -54,5 +54,6 @@ env_t *gc_alloc_env(gc_t *gc, unsigned int capacity, env_t *next);
 /* Marquage/Traçage (cf. gc_mark.c) */
 
 void mark_and_trace_roots(struct _vm *vm);
+
 
 #endif

@@ -48,9 +48,9 @@ typedef struct {
 
 
 /** Représentation des paires car/cdr.
-Les allocations/désallocations de paires sont gérées par
-le garbage collector (GC).
- */
+    Les allocations/désallocations de paires sont gérées par
+    le garbage collector (GC).
+*/
 typedef struct _pair {
   value_t car;  /*!< premier élément de la paire. */
   value_t cdr;  /*!< second élément de la paire. */

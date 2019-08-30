@@ -43,7 +43,7 @@ typedef struct _vm {
 #define STACK_SIZE 256
 
 /** La taille allouée pour les variables globales */
-#define GLOBS_SIZE 256
+#define GLOBS_SIZE 512
 
 /** La fréquence de GC par défaut (en nombre d'instructions exécutées) */
 #define DEFAULT_GC_FREQUENCY 10000

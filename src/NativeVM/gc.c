@@ -32,6 +32,7 @@
 #include <stdio.h>
 
 #include "vm.h"
+#include "gc.h"
 
 /** Affichage du tas par le GC (déboguage). */
 void print_gc_list(char *msg, gc_cell_t *head) {
@@ -218,7 +219,7 @@ static void gc_delete_env(env_t *env) {
  * \param debug_gc GC en mode debug (1) ou non (0)
  * \param collection_frequency indique la fréquence de la récupération mémoire.
  * Cette fréquence est comptée en nombre d'instructions exécutées par la VM. 
-*/
+ */
 gc_t * init_gc(int debug_gc, int collection_frequency) {
   gc_t * gc = (gc_t *) malloc(sizeof(gc_t));
   assert(gc!=NULL);

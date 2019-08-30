@@ -5,11 +5,8 @@
  * Redistribution possible sous licence GPL v2.0 ou ultérieure
  */
 
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include "vm.h"
-#include "constants.h"
+#include "prim.h"
+
 
 /** \file prim.c
  * Implémentation des primitives
@@ -21,7 +18,8 @@ static int arith_neutral(int prim) {
   case P_ADD:
   case P_SUB: return 0;
   case P_MUL:
-  case P_DIV: return 1;
+  case P_DIV:
+  case P_POW: return 1;
   default: {
     printf("unknow primitive: %d\n", prim);
     abort();
@@ -36,6 +34,13 @@ static int apply_arith_prim(int prim, int n1, int n2) {
   case P_SUB: return (n1 - n2);
   case P_MUL: return (n1 * n2);
   case P_DIV: return (n1 / n2);
+  case P_POW:
+    { int i,r = 1;
+      for (i = 0; i < n2; i++){
+	r *= n1;
+      }
+      return r;
+    }
   default: {
     printf("unknow primitive: %d\n", prim);
     abort();
@@ -78,18 +83,78 @@ void do_arith_prim(varray_t *stack, int n, int op) {
 /** Primitive d'égalité
  * \param[in,out] stack la zone de pile concernée.
  */
-void do_eq_prim(varray_t *stack) {
+void do_equality_prim(int prim, varray_t *stack) {
   int r = 0; // par défaut le résultat est faux
   
   // Tester si les types des arguments sont égaux
-  if(varray_top_at(stack,0)->type 
+  if((prim == P_EQEQ || prim == P_DIFEQ) &&
+     varray_top_at(stack,0)->type != varray_top_at(stack, 1)->type) {
+    // sinon les types sont différents
+    printf("Unable to apply eq with types: %d and %d\n",
+	   varray_top_at(stack, 0)->type,
+	   varray_top_at(stack, 1)->type);
+    abort();
+  }
+  switch(varray_top_at(stack,0)->type) {
+    // pour les booléens et les entiers, on compare la valeur
+  case T_BOOL:
+  case T_INT:
+    switch (prim) {
+    case P_EQEQ:
+    case P_EQ: r = (value_int_get(varray_top_at(stack, 0))
+		    == value_int_get(varray_top_at(stack, 1))); break;
+    case P_DIFEQ:
+    case P_DIF: r = (value_int_get(varray_top_at(stack, 0))
+		     != value_int_get(varray_top_at(stack, 1))); break;
+    }
+    break;
+            
+  case T_PAIR:  // pour les paires ce n'est pas encore implémenté
+    printf("Implement me: compare two pair\n");
+    abort();
+    break;
+    // pour le reste on ne peut comparer par égalité (?)
+  default:
+    printf("Unable to apply eq with type: %d\n", 
+	   varray_top_at(stack, 0)->type);
+    abort();
+  }
+    
+  // on dépile tous les arguments (moins 1).
+  varray_popn(stack, 1);
+  // et on place le résultat en sommet de pile
+  value_fill_bool(varray_top_at(stack, 0), r);
+}
+
+
+void do_inf_sup_prim(int prim, varray_t *stack) {
+  int r = 0; // par défaut le résultat est faux
+    
+  // Tester si les types des arguments sont égaux
+  if(varray_top_at(stack,0)->type
      == varray_top_at(stack, 1)->type) {
     switch(varray_top_at(stack,0)->type) {
       // pour les booléens et les entiers, on compare la valeur
     case T_BOOL:
     case T_INT:
-      r = (value_int_get(varray_top_at(stack, 0))
-           == value_int_get(varray_top_at(stack, 1)));
+      switch (prim) {
+      case P_INF:
+	r = (value_int_get(varray_top_at(stack, 0))
+	     < value_int_get(varray_top_at(stack, 1)));
+	break;
+      case P_SUP:
+	r = (value_int_get(varray_top_at(stack, 0))
+	     > value_int_get(varray_top_at(stack, 1)));
+	break;
+      case P_INFEQ:
+	r = (value_int_get(varray_top_at(stack, 0))
+	     <= value_int_get(varray_top_at(stack, 1)));
+	break;
+      case P_SUPEQ:
+	r = (value_int_get(varray_top_at(stack, 0))
+	     >= value_int_get(varray_top_at(stack, 1)));
+	break;
+      }
       break;
     case T_PAIR:  // pour les paires ce n'est pas encore implémenté
       printf("Implement me: compare two pair\n");
@@ -97,23 +162,24 @@ void do_eq_prim(varray_t *stack) {
       break;
       // pour le reste on ne peut comparer par égalité (?)
     default:
-      printf("Unable to apply eq with type: %d\n", 
-             varray_top_at(stack, 0)->type);
+      printf("Unable to apply eq with type: %d\n",
+	     varray_top_at(stack, 0)->type);
       abort();
     }
-    
+        
     // on dépile tous les arguments (moins 1).
     varray_popn(stack, 1);
     // et on place le résultat en sommet de pile
-    value_fill_bool(varray_top_at(stack, 0), r);  
+    value_fill_bool(varray_top_at(stack, 0), r);
   }
   else { // sinon les types sont différents
-    printf("Unable to apply eq with types: %d and %d\n", 
-           varray_top_at(stack, 0)->type,
-           varray_top_at(stack, 1)->type);
+    printf("Unable to apply eq with types: %d and %d\n",
+	   varray_top_at(stack, 0)->type,
+	   varray_top_at(stack, 1)->type);
     abort();
   }
 }
+
 
 /** Primitive de construction
  * \param[in,out] vm l'état de la machine.
@@ -192,7 +258,6 @@ void do_cdr_prim(varray_t *stack) {
   varray_set_top(stack, value_get_cdr(varray_top(stack)));  
 }
 
-
 /** Exécution d'une primitive.
  * Les arguments sont sur la pile du cadre d'appel (frame) courant 
  * (premier argument au sommet, etc.).
@@ -207,23 +272,31 @@ void execute_prim(vm_t * vm, varray_t *stack, int prim, int n) {
   case P_ADD: 
   case P_SUB: 
   case P_MUL: 
-  case P_DIV: 
+  case P_DIV:
+  case P_POW:
     do_arith_prim(stack, n, prim); break;
     
     // égalité
   case P_EQ:
-    do_eq_prim(stack); break;
-    break;
+  case P_DIF:
+  case P_EQEQ:
+  case P_DIFEQ:
+    do_equality_prim(prim,stack); break;
+  case P_INF:
+  case P_SUP:
+  case P_INFEQ:
+  case P_SUPEQ:
+    do_inf_sup_prim(prim, stack); break;
 
-    /* pour les paires 
+    //pour les paires
     // Construire une nouvelle paire.
   case P_CONS:
     do_cons_prim(vm,stack); break;
     break;
     
     // On construit une liste, donc une suite de paires:
-  case P_LIST: 
-    do_list_prim(vm,stack,n); break;
+    /*case P_LIST:
+      do_list_prim(vm,stack,n); break; */
 
     // car 
   case P_CAR:
@@ -232,8 +305,7 @@ void execute_prim(vm_t * vm, varray_t *stack, int prim, int n) {
     // cdr
   case P_CDR:
     do_cdr_prim(stack); break;
-    
-    */
+
   default:
     printf("unknow primitive: %d with %d args\n", prim, n);
     abort();
