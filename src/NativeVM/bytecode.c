@@ -188,7 +188,7 @@ int bytecode_print_instr(program_t *program, unsigned int pc) {
     return pc+2;
   }
   case I_JTRUE: {
-    printf("JFALSE %d\n", program->bytecode[pc+1]);
+    printf("JTRUE %d\n", program->bytecode[pc+1]);
     return pc+2;
   }
   default:
