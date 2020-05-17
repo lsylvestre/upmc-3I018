@@ -2,7 +2,7 @@
 
 
 ## MLCompiler + NativeVM    
-*(OCaml > 4.05)*
+*(OCaml >= 4.07)*
 
 ```
 $ cd src/MLCompiler/
